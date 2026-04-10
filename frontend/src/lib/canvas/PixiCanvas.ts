@@ -393,6 +393,13 @@ export class PixiCanvas {
 
 	setBlocks(blocks: AtlasBlock[]) {
 		this.currentBlocks = blocks;
+		// Sync visual sprites with store data
+		for (const block of blocks) {
+			const sprite = this.blockSprites.get(block.id);
+			if (sprite) {
+				sprite.updateBlock(block);
+			}
+		}
 	}
 
 	// --- Collision ---
