@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { Texture } from 'pixi.js';
+	import { Assets, Texture } from 'pixi.js';
 	import { PixiCanvas } from '$lib/canvas/PixiCanvas.js';
 	import { atlas } from '$lib/stores/atlas.svelte.js';
 	import { selection } from '$lib/stores/selection.svelte.js';
@@ -87,14 +87,16 @@
 				try {
 					const url = URL.createObjectURL(file);
 					objectUrls.add(url);
-					texture = await Texture.from(url);
+					const loaded = await Assets.load<Texture>(url);
+					if (!loaded) continue;
+					texture = loaded;
 					channelMap.set(channel, texture);
 				} catch {
 					continue;
 				}
 			}
 
-			pixiCanvas?.setBlockChannelTexture(blockId, channel, texture);
+			pixiCanvas?.setBlockChannelTexture(blockId, channel, texture!);
 		}
 	}
 
