@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { Assets, Texture } from 'pixi.js';
+	import { Texture } from 'pixi.js';
 	import { PixiCanvas } from '$lib/canvas/PixiCanvas.js';
 	import { atlas } from '$lib/stores/atlas.svelte.js';
 	import { selection } from '$lib/stores/selection.svelte.js';
@@ -85,13 +85,12 @@
 			let texture = channelMap.get(channel);
 			if (!texture) {
 				try {
-					const url = URL.createObjectURL(file);
-					objectUrls.add(url);
-					const loaded = await Assets.load<Texture>(url);
-					if (!loaded) continue;
-					texture = loaded;
+					const blob = new Blob([await file.arrayBuffer()], { type: file.type || 'image/png' });
+					const bitmap = await createImageBitmap(blob);
+					texture = Texture.from({ resource: bitmap, alphaMode: 'premultiply-alpha-on-upload' });
 					channelMap.set(channel, texture);
-				} catch {
+				} catch (err) {
+					console.warn(`Failed to load texture ${channel}:`, err);
 					continue;
 				}
 			}
