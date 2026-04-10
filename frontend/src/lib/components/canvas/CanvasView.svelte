@@ -87,7 +87,7 @@
 				try {
 					const blob = new Blob([await file.arrayBuffer()], { type: file.type || 'image/png' });
 					const bitmap = await createImageBitmap(blob);
-					texture = Texture.from({ resource: bitmap, alphaMode: 'premultiply-alpha-on-upload' });
+					texture = Texture.from(bitmap);
 					channelMap.set(channel, texture);
 				} catch (err) {
 					console.warn(`Failed to load texture ${channel}:`, err);
