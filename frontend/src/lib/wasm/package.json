@@ -1,0 +1,15 @@
+{
+  "name": "trimm-core",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "trimm_core_bg.wasm",
+    "trimm_core.js",
+    "trimm_core.d.ts"
+  ],
+  "main": "trimm_core.js",
+  "types": "trimm_core.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

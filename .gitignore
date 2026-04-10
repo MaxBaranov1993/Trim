@@ -1,0 +1,22 @@
+node_modules/
+.svelte-kit/
+build/
+dist/
+.env
+.env.*
+*.log
+
+# Rust build artifacts
+crate/target/
+crate/pkg/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
