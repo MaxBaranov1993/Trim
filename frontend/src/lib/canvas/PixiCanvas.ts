@@ -508,6 +508,13 @@ export class PixiCanvas {
 
 	setBlocks(blocks: AtlasBlock[]) {
 		this.currentBlocks = blocks;
+		// Remove sprites for blocks that no longer exist in the store
+		const incomingIds = new Set(blocks.map((b) => b.id));
+		for (const id of [...this.blockSprites.keys()]) {
+			if (!incomingIds.has(id)) {
+				this.removeBlock(id);
+			}
+		}
 		// Sync visual sprites with store data
 		for (const block of blocks) {
 			const sprite = this.blockSprites.get(block.id);

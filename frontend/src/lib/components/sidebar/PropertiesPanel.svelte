@@ -31,8 +31,12 @@
 
 	function deleteBlock() {
 		if (!selectedBlock) return;
-		atlas.removeBlock(selectedBlock.id);
+		history.push();
+		const id = selectedBlock.id;
+		if (selection.editingBlockId === id) selection.editingBlockId = null;
+		atlas.removeBlock(id);
 		selection.selectedBlockId = null;
+		project.markDirty();
 	}
 
 	function fitTextureToBox() {
