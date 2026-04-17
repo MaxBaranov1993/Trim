@@ -47,12 +47,15 @@
 			selectedBlock.width / t.nativeWidth,
 			selectedBlock.height / t.nativeHeight
 		);
+		// Texture container pivots on (nw/2, nh/2) and scales around that pivot,
+		// so offsetX/Y that center the texture are scale-independent:
+		// centerX_in_frame = offsetX + nw/2  →  offsetX = (boxW - nw)/2 for centering.
 		const newTransform: TextureTransform = {
 			...t,
 			scale,
 			rotation: 0,
-			offsetX: (selectedBlock.width - t.nativeWidth * scale) / 2,
-			offsetY: (selectedBlock.height - t.nativeHeight * scale) / 2
+			offsetX: (selectedBlock.width - t.nativeWidth) / 2,
+			offsetY: (selectedBlock.height - t.nativeHeight) / 2
 		};
 		history.push();
 		atlas.updateBlock(selectedBlock.id, { textureTransform: newTransform });
