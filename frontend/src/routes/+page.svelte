@@ -10,6 +10,7 @@
 	import { atlas } from '$lib/stores/atlas.svelte.js';
 	import { history } from '$lib/stores/history.svelte.js';
 	import { project } from '$lib/stores/project.svelte.js';
+	import { selection } from '$lib/stores/selection.svelte.js';
 	import { initWasm, wasmGreet } from '$lib/engine/wasm-bridge.js';
 	import { autoPackMaterials } from '$lib/engine/autopacker.js';
 	import { exportAtlas, downloadAsZip } from '$lib/engine/exporter.js';
@@ -92,6 +93,29 @@
 		if (e.key === 'Delete' || e.key === 'Backspace') {
 			canvasView?.deleteSelected();
 			return;
+		}
+
+		// ] / [ — reorder selected block (only outside text inputs)
+		const target = e.target as HTMLElement | null;
+		const typing =
+			target?.tagName === 'INPUT' ||
+			target?.tagName === 'TEXTAREA' ||
+			target?.isContentEditable;
+		if (!typing && selection.selectedBlockId) {
+			if (e.key === ']') {
+				e.preventDefault();
+				history.push();
+				atlas.bringToFront(selection.selectedBlockId);
+				project.markDirty();
+				return;
+			}
+			if (e.key === '[') {
+				e.preventDefault();
+				history.push();
+				atlas.sendToBack(selection.selectedBlockId);
+				project.markDirty();
+				return;
+			}
 		}
 
 		// Arrow keys — nudge

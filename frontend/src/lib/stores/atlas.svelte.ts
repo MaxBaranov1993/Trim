@@ -6,6 +6,7 @@ let blocks = $state<AtlasBlock[]>([]);
 let materials = $state<MaterialGroup[]>([]);
 let activeChannel = $state<PBRChannel>('baseColor');
 let padding = $state(0);
+let allowOverlap = $state(false);
 
 export const atlas = {
 	get canvasWidth() {
@@ -38,6 +39,12 @@ export const atlas = {
 	set padding(v: number) {
 		padding = v;
 	},
+	get allowOverlap() {
+		return allowOverlap;
+	},
+	set allowOverlap(v: boolean) {
+		allowOverlap = v;
+	},
 
 	addBlock(block: AtlasBlock) {
 		blocks.push(block);
@@ -50,6 +57,18 @@ export const atlas = {
 		if (idx !== -1) {
 			blocks[idx] = { ...blocks[idx], ...updates };
 		}
+	},
+	bringToFront(id: string) {
+		const idx = blocks.findIndex((b) => b.id === id);
+		if (idx === -1 || idx === blocks.length - 1) return;
+		const target = blocks[idx];
+		blocks = [...blocks.slice(0, idx), ...blocks.slice(idx + 1), target];
+	},
+	sendToBack(id: string) {
+		const idx = blocks.findIndex((b) => b.id === id);
+		if (idx <= 0) return;
+		const target = blocks[idx];
+		blocks = [target, ...blocks.slice(0, idx), ...blocks.slice(idx + 1)];
 	},
 	addMaterial(material: MaterialGroup) {
 		materials.push(material);

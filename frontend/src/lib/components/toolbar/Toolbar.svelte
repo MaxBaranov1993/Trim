@@ -82,6 +82,14 @@
 				onchange={(e) => (atlas.padding = Number((e.target as HTMLInputElement).value))}
 			/>
 		</label>
+		<button
+			class="toolbar-btn overlap-btn"
+			class:active={atlas.allowOverlap}
+			onclick={() => (atlas.allowOverlap = !atlas.allowOverlap)}
+			title="Allow blocks to overlap (manual placement only — auto-pack stays non-overlapping). Use [ and ] to send back / bring to front."
+		>
+			Overlap: {atlas.allowOverlap ? 'On' : 'Off'}
+		</button>
 	</div>
 
 	<div class="toolbar-section toolbar-right">
@@ -223,6 +231,11 @@
 
 	.pack-btn:hover {
 		background: var(--bg-button-hover);
+	}
+
+	.overlap-btn.active {
+		background: var(--accent);
+		color: #fff;
 	}
 
 	.pad-input {

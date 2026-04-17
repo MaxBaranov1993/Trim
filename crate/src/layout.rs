@@ -166,26 +166,23 @@ pub fn auto_pack(
     ];
 
     for (orig_idx, item) in &sorted {
-        let padded_w = item.width + padding * 2;
-        let padded_h = item.height + padding * 2;
-
-        // Find best free rect (Best Short Side Fit)
+        // Fit test uses the item's real size so items may touch the canvas edge.
         let mut best_rect_idx = None;
         let mut best_short_side = u32::MAX;
         let mut best_x = 0u32;
         let mut best_y = 0u32;
 
         for (i, rect) in free_rects.iter().enumerate() {
-            if padded_w <= rect.width && padded_h <= rect.height {
-                let leftover_w = rect.width - padded_w;
-                let leftover_h = rect.height - padded_h;
+            if item.width <= rect.width && item.height <= rect.height {
+                let leftover_w = rect.width - item.width;
+                let leftover_h = rect.height - item.height;
                 let short_side = leftover_w.min(leftover_h);
 
                 if short_side < best_short_side {
                     best_short_side = short_side;
                     best_rect_idx = Some(i);
-                    best_x = rect.x + padding;
-                    best_y = rect.y + padding;
+                    best_x = rect.x;
+                    best_y = rect.y;
                 }
             }
         }
@@ -201,12 +198,13 @@ pub fn auto_pack(
                 placed: true,
             };
 
-            // Split free rects around the placed padded item
+            // Inflate the occupied rect by padding on all sides so the
+            // splitting step reserves a gap around this item for neighbours.
             let placed = Rect {
-                x: best_x - padding,
-                y: best_y - padding,
-                width: padded_w,
-                height: padded_h,
+                x: best_x.saturating_sub(padding),
+                y: best_y.saturating_sub(padding),
+                width: item.width + padding * 2,
+                height: item.height + padding * 2,
             };
 
             let mut new_free = Vec::new();

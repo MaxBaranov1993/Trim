@@ -75,6 +75,9 @@ export class PixiCanvas {
 	// Reference to current blocks for collision checks
 	private currentBlocks: AtlasBlock[] = [];
 
+	// When true, blocks are allowed to overlap (drag-end/resize-end will not revert).
+	allowOverlap = false;
+
 	constructor() {
 		this.app = new Application();
 		this.viewport = new Container();
@@ -310,7 +313,7 @@ export class PixiCanvas {
 			if (this.draggingBlockId) {
 				const sprite = this.blockSprites.get(this.draggingBlockId);
 				if (sprite) {
-					if (this.checkCollision(sprite.block)) {
+					if (!this.allowOverlap && this.checkCollision(sprite.block)) {
 						// Revert to original position
 						sprite.updateBlock({
 							...sprite.block,
@@ -330,7 +333,7 @@ export class PixiCanvas {
 			if (this.resizingBlockId) {
 				const sprite = this.blockSprites.get(this.resizingBlockId);
 				if (sprite) {
-					if (this.checkCollision(sprite.block)) {
+					if (!this.allowOverlap && this.checkCollision(sprite.block)) {
 						// Revert resize
 						sprite.updateBlock({
 							...sprite.block,
@@ -464,6 +467,13 @@ export class PixiCanvas {
 		}
 	}
 
+	reorderBlockSprite(id: string, position: 'front' | 'back') {
+		const sprite = this.blockSprites.get(id);
+		if (!sprite) return;
+		const last = this.blocksLayer.children.length - 1;
+		this.blocksLayer.setChildIndex(sprite.container, position === 'front' ? last : 0);
+	}
+
 	selectBlock(id: string) {
 		// Exit edit mode if switching to a different block
 		if (this.editingBlockId && this.editingBlockId !== id) {
@@ -506,6 +516,13 @@ export class PixiCanvas {
 				if (block.textureTransform) {
 					sprite.applyTextureTransform(block.textureTransform);
 				}
+			}
+		}
+		// Sync Pixi child render order to array order (last = top).
+		for (let i = 0; i < blocks.length; i++) {
+			const sprite = this.blockSprites.get(blocks[i].id);
+			if (sprite) {
+				this.blocksLayer.setChildIndex(sprite.container, i);
 			}
 		}
 	}

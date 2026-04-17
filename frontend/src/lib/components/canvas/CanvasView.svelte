@@ -148,6 +148,11 @@
 		if (pixiReady) pixiCanvas?.setEditingBlock(id);
 	});
 
+	$effect(() => {
+		const allow = atlas.allowOverlap;
+		if (pixiCanvas) pixiCanvas.allowOverlap = allow;
+	});
+
 	export function fitToView() {
 		pixiCanvas?.fitToView();
 	}

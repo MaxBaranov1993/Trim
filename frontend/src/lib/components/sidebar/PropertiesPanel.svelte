@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { atlas } from '$lib/stores/atlas.svelte.js';
 	import { selection } from '$lib/stores/selection.svelte.js';
-	import { BLOCK_SIZES, type BlockSize } from '$lib/engine/types.js';
+	import { history } from '$lib/stores/history.svelte.js';
+	import { project } from '$lib/stores/project.svelte.js';
+	import { BLOCK_SIZES, type BlockSize, type TextureTransform } from '$lib/engine/types.js';
 
 	let selectedBlock = $derived(
 		selection.selectedBlockId
@@ -32,6 +34,26 @@
 		atlas.removeBlock(selectedBlock.id);
 		selection.selectedBlockId = null;
 	}
+
+	function fitTextureToBox() {
+		if (!selectedBlock || !selectedBlock.textureTransform) return;
+		const t = selectedBlock.textureTransform;
+		if (t.nativeWidth <= 0 || t.nativeHeight <= 0) return;
+		const scale = Math.min(
+			selectedBlock.width / t.nativeWidth,
+			selectedBlock.height / t.nativeHeight
+		);
+		const newTransform: TextureTransform = {
+			...t,
+			scale,
+			rotation: 0,
+			offsetX: (selectedBlock.width - t.nativeWidth * scale) / 2,
+			offsetY: (selectedBlock.height - t.nativeHeight * scale) / 2
+		};
+		history.push();
+		atlas.updateBlock(selectedBlock.id, { textureTransform: newTransform });
+		project.markDirty();
+	}
 </script>
 
 {#if selectedBlock}
@@ -60,6 +82,14 @@
 				{/each}
 			</select>
 		</div>
+		<button
+			class="fit-btn"
+			onclick={fitTextureToBox}
+			disabled={!selectedBlock.textureTransform}
+			title="Scale texture to fit inside the box (preserves aspect ratio)"
+		>
+			Fit texture
+		</button>
 		<button class="delete-btn" onclick={deleteBlock}>
 			Delete Block
 		</button>
@@ -114,8 +144,32 @@
 		border-color: var(--accent);
 	}
 
-	.delete-btn {
+	.fit-btn {
 		margin-top: 12px;
+		background: transparent;
+		color: var(--text);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius);
+		padding: 6px;
+		cursor: pointer;
+		font-size: 11px;
+		font-family: inherit;
+		transition: background 0.12s, border-color 0.12s, color 0.12s;
+	}
+
+	.fit-btn:hover:not(:disabled) {
+		background: rgba(13, 153, 255, 0.12);
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	.fit-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.delete-btn {
+		margin-top: 4px;
 		background: transparent;
 		color: var(--danger);
 		border: 1px solid var(--border-strong);
