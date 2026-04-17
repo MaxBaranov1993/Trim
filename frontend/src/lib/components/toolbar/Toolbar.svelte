@@ -99,26 +99,27 @@
 	.toolbar {
 		display: flex;
 		align-items: center;
-		gap: 16px;
-		padding: 8px 16px;
-		background: #16213e;
-		border-bottom: 1px solid #2a2a4a;
-		color: #e0e0e0;
-		font-size: 13px;
+		gap: 14px;
+		padding: 0 12px;
+		background: var(--bg-panel);
+		border-bottom: 1px solid var(--border);
+		color: var(--text);
+		font-size: 12px;
 		height: 44px;
 		flex-shrink: 0;
 	}
 
 	.toolbar-label {
 		font-weight: 600;
-		font-size: 14px;
-		color: #8be9fd;
+		font-size: 13px;
+		color: var(--text);
+		letter-spacing: 0.1px;
 	}
 
 	.toolbar-section {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 6px;
 	}
 
 	.toolbar-right {
@@ -129,105 +130,119 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		color: #aaa;
+		color: var(--text-muted);
+		font-size: 11px;
 	}
 
 	.size-separator {
-		color: #666;
+		color: var(--text-dim);
 	}
 
 	select {
-		background: #1a1a2e;
-		color: #e0e0e0;
-		border: 1px solid #333;
-		border-radius: 4px;
+		background: var(--bg-input);
+		color: var(--text);
+		border: 1px solid transparent;
+		border-radius: var(--radius);
 		padding: 4px 8px;
-		font-size: 12px;
+		font-size: 11px;
 		cursor: pointer;
+		outline: none;
+		transition: border-color 0.12s, background 0.12s;
 	}
 
 	select:hover {
-		border-color: #555;
+		background: var(--bg-input-hover);
+	}
+
+	select:focus {
+		border-color: var(--accent);
 	}
 
 	.channel-tabs {
 		gap: 2px;
+		padding: 2px;
+		background: var(--bg-panel-alt);
+		border-radius: var(--radius);
+		border: 1px solid var(--border);
 	}
 
 	.channel-tab {
 		background: transparent;
-		color: #888;
+		color: var(--text-muted);
 		border: 1px solid transparent;
-		border-radius: 4px;
+		border-radius: 3px;
 		padding: 4px 10px;
 		cursor: pointer;
 		font-size: 11px;
 		font-weight: 500;
 		transition:
-			background 0.15s,
-			color 0.15s;
+			background 0.12s,
+			color 0.12s;
 	}
 
 	.channel-tab:hover {
-		background: rgba(255, 255, 255, 0.05);
-		color: #bbb;
+		background: rgba(255, 255, 255, 0.04);
+		color: var(--text);
 	}
 
 	.channel-tab.active {
-		background: color-mix(in srgb, var(--ch-color) 15%, transparent);
-		color: var(--ch-color);
-		border-color: color-mix(in srgb, var(--ch-color) 30%, transparent);
+		background: var(--accent);
+		color: #fff;
+		border-color: var(--accent);
 	}
 
 	.toolbar-btn {
-		background: #2a2a4a;
-		color: #e0e0e0;
-		border: 1px solid #444;
-		border-radius: 4px;
-		padding: 4px 12px;
+		background: var(--bg-button);
+		color: var(--text);
+		border: 1px solid transparent;
+		border-radius: var(--radius);
+		padding: 5px 12px;
 		cursor: pointer;
-		font-size: 12px;
+		font-size: 11px;
+		font-weight: 500;
+		transition: background 0.12s;
 	}
 
 	.toolbar-btn:hover {
-		background: #3a3a5a;
+		background: var(--bg-button-hover);
 	}
 
 	.export-btn {
-		background: #2a4a3a;
-		border-color: #3a6a4a;
+		background: var(--accent);
+		color: #fff;
 	}
 
 	.export-btn:hover {
-		background: #3a6a4a;
+		background: var(--accent-hover);
 	}
 
 	.pack-btn {
-		background: #3a2a5a;
-		border-color: #5a4a7a;
+		background: var(--bg-button);
+		color: var(--text);
 	}
 
 	.pack-btn:hover {
-		background: #5a4a7a;
+		background: var(--bg-button-hover);
 	}
 
 	.pad-input {
 		width: 48px;
-		background: #1a1a2e;
-		color: #e0e0e0;
-		border: 1px solid #333;
-		border-radius: 4px;
+		background: var(--bg-input);
+		color: var(--text);
+		border: 1px solid transparent;
+		border-radius: var(--radius);
 		padding: 4px 6px;
-		font-size: 12px;
+		font-size: 11px;
 		text-align: center;
+		outline: none;
+		transition: border-color 0.12s, background 0.12s;
 	}
 
 	.pad-input:hover {
-		border-color: #555;
+		background: var(--bg-input-hover);
 	}
 
 	.pad-input:focus {
-		outline: none;
-		border-color: #8be9fd;
+		border-color: var(--accent);
 	}
 </style>

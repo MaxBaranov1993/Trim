@@ -84,19 +84,19 @@
 
 <style>
 	.import-panel {
-		padding: 12px;
+		padding: 0 12px 12px;
 		text-align: center;
 		border: 2px dashed transparent;
-		border-radius: 4px;
-		transition: border-color 0.2s;
+		border-radius: var(--radius);
+		transition: border-color 0.2s, background 0.2s;
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
 	}
 
 	.drag-over {
-		border-color: #8be9fd;
-		background: rgba(139, 233, 253, 0.05);
+		border-color: var(--accent);
+		background: var(--accent-soft);
 	}
 
 	.hidden-input {
@@ -104,43 +104,49 @@
 	}
 
 	.new-btn {
-		background: #2a5a3a;
-		color: #e0e0e0;
-		border: 1px solid #3a7a4e;
-		border-radius: 6px;
-		padding: 8px 20px;
+		background: var(--accent);
+		color: #fff;
+		border: none;
+		border-radius: var(--radius);
+		padding: 7px 20px;
 		cursor: pointer;
-		font-size: 13px;
+		font-size: 12px;
+		font-weight: 500;
 		width: 100%;
+		font-family: inherit;
+		transition: background 0.12s;
 	}
 
 	.new-btn:hover {
-		background: #3a7a4e;
+		background: var(--accent-hover);
 	}
 
 	.import-btn {
-		background: #2a4a6e;
-		color: #e0e0e0;
-		border: 1px solid #3a5a8e;
-		border-radius: 6px;
-		padding: 8px 20px;
+		background: var(--bg-button);
+		color: var(--text);
+		border: 1px solid transparent;
+		border-radius: var(--radius);
+		padding: 7px 20px;
 		cursor: pointer;
-		font-size: 13px;
+		font-size: 12px;
+		font-weight: 500;
 		width: 100%;
+		font-family: inherit;
+		transition: background 0.12s;
 	}
 
 	.import-btn:hover {
-		background: #3a5a8e;
+		background: var(--bg-button-hover);
 	}
 
 	.drop-hint {
-		color: #555;
+		color: var(--text-dim);
 		font-size: 11px;
 		margin: 4px 0 0;
 	}
 
 	.processing {
-		color: #8be9fd;
+		color: var(--accent);
 		font-size: 12px;
 		padding: 8px 0;
 	}

@@ -72,57 +72,68 @@
 	.props {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 6px;
 	}
 
 	.prop-row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		font-size: 12px;
+		font-size: 11px;
+		min-height: 24px;
 	}
 
 	.prop-label {
-		color: #888;
+		color: var(--text-muted);
 	}
 
 	.prop-value {
-		color: #e0e0e0;
-		font-family: monospace;
+		color: var(--text);
+		font-family: 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace;
 		font-size: 11px;
 	}
 
 	select {
-		background: #1a1a2e;
-		color: #e0e0e0;
-		border: 1px solid #333;
-		border-radius: 4px;
-		padding: 2px 6px;
+		background: var(--bg-input);
+		color: var(--text);
+		border: 1px solid transparent;
+		border-radius: var(--radius);
+		padding: 3px 8px;
 		font-size: 11px;
 		cursor: pointer;
+		outline: none;
+		font-family: inherit;
+		transition: background 0.12s, border-color 0.12s;
 	}
 
 	select:hover {
-		border-color: #555;
+		background: var(--bg-input-hover);
+	}
+
+	select:focus {
+		border-color: var(--accent);
 	}
 
 	.delete-btn {
-		margin-top: 8px;
-		background: #5a2a2a;
-		color: #ff7777;
-		border: 1px solid #774444;
-		border-radius: 4px;
+		margin-top: 12px;
+		background: transparent;
+		color: var(--danger);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius);
 		padding: 6px;
 		cursor: pointer;
-		font-size: 12px;
+		font-size: 11px;
+		font-family: inherit;
+		transition: background 0.12s, border-color 0.12s;
 	}
 
 	.delete-btn:hover {
-		background: #7a3333;
+		background: rgba(229, 72, 77, 0.12);
+		border-color: var(--danger);
 	}
 
 	.placeholder {
-		color: #555;
+		color: var(--text-dim);
 		font-size: 12px;
 		margin: 0;
 	}

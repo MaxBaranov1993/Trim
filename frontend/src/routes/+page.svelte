@@ -282,16 +282,68 @@
 <Toast />
 
 <style>
+	:global(:root) {
+		--bg-app: #1e1e1e;
+		--bg-panel: #2c2c2c;
+		--bg-panel-alt: #242424;
+		--bg-canvas: #1e1e1e;
+		--bg-input: #383838;
+		--bg-input-hover: #484848;
+		--bg-button: #383838;
+		--bg-button-hover: #484848;
+		--border: #3c3c3c;
+		--border-strong: #4c4c4c;
+		--text: #e5e5e5;
+		--text-muted: #9b9b9b;
+		--text-dim: #6b6b6b;
+		--accent: #0d99ff;
+		--accent-hover: #2fa8ff;
+		--accent-soft: rgba(13, 153, 255, 0.15);
+		--danger: #e5484d;
+		--success: #37c76c;
+		--radius: 4px;
+	}
+
 	:global(body) {
 		margin: 0;
 		padding: 0;
-		background: #0f0f23;
+		background: var(--bg-app);
+		color: var(--text);
 		font-family:
+			'Inter',
 			-apple-system,
 			BlinkMacSystemFont,
 			'Segoe UI',
 			sans-serif;
+		font-size: 12px;
+		-webkit-font-smoothing: antialiased;
 		overflow: hidden;
+	}
+
+	:global(button),
+	:global(input),
+	:global(select),
+	:global(textarea) {
+		font-family: inherit;
+	}
+
+	:global(::-webkit-scrollbar) {
+		width: 10px;
+		height: 10px;
+	}
+
+	:global(::-webkit-scrollbar-track) {
+		background: transparent;
+	}
+
+	:global(::-webkit-scrollbar-thumb) {
+		background: #3c3c3c;
+		border-radius: 5px;
+		border: 2px solid var(--bg-panel);
+	}
+
+	:global(::-webkit-scrollbar-thumb:hover) {
+		background: #4c4c4c;
 	}
 
 	.app {
@@ -309,9 +361,9 @@
 
 	.sidebar-left,
 	.sidebar-right {
-		width: 240px;
-		background: #16213e;
-		border-right: 1px solid #2a2a4a;
+		width: 248px;
+		background: var(--bg-panel);
+		border-right: 1px solid var(--border);
 		display: flex;
 		flex-direction: column;
 		flex-shrink: 0;
@@ -320,7 +372,7 @@
 
 	.sidebar-right {
 		border-right: none;
-		border-left: 1px solid #2a2a4a;
+		border-left: 1px solid var(--border);
 	}
 
 	.canvas-area {
@@ -328,36 +380,39 @@
 		display: flex;
 		overflow: hidden;
 		position: relative;
+		background: var(--bg-canvas);
 	}
 
 	.panel {
-		border-bottom: 1px solid #2a2a4a;
+		border-bottom: 1px solid var(--border);
 	}
 
 	.panel-header {
-		padding: 8px 12px;
+		padding: 10px 12px 6px;
 		font-size: 11px;
 		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		color: #8be9fd;
-		background: #1a1a30;
+		letter-spacing: 0.2px;
+		color: var(--text);
+		background: var(--bg-panel);
+		display: flex;
+		align-items: center;
+		gap: 6px;
 	}
 
 	.panel-body {
-		padding: 12px;
+		padding: 0 12px 12px;
 	}
 
 	.placeholder {
-		color: #555;
+		color: var(--text-dim);
 		font-size: 12px;
 		margin: 0;
 	}
 
 	.wasm-status {
-		color: #50fa7b;
+		color: var(--success);
 		font-size: 11px;
-		font-family: monospace;
+		font-family: 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace;
 		margin: 0;
 	}
 
@@ -375,7 +430,7 @@
 
 	.count {
 		font-weight: 400;
-		color: #666;
+		color: var(--text-dim);
 	}
 
 	.recovery-bar {
@@ -383,60 +438,65 @@
 		align-items: center;
 		gap: 12px;
 		padding: 8px 16px;
-		background: #2a3a1a;
-		border-bottom: 1px solid #4a5a2a;
-		color: #c0d080;
+		background: #2d2a1a;
+		border-bottom: 1px solid #4a4530;
+		color: #d8cc80;
 		font-size: 12px;
 	}
 
 	.recovery-btn {
 		padding: 4px 12px;
-		border-radius: 4px;
+		border-radius: var(--radius);
 		border: 1px solid;
 		cursor: pointer;
 		font-size: 11px;
+		font-family: inherit;
 	}
 
 	.recovery-btn.restore {
-		background: #3a5a2a;
-		border-color: #5a7a3a;
-		color: #c0f080;
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
 	}
 
 	.recovery-btn.restore:hover {
-		background: #4a6a3a;
+		background: var(--accent-hover);
+		border-color: var(--accent-hover);
 	}
 
 	.recovery-btn.dismiss {
 		background: transparent;
-		border-color: #555;
-		color: #888;
+		border-color: var(--border-strong);
+		color: var(--text-muted);
 	}
 
 	.recovery-btn.dismiss:hover {
 		background: rgba(255, 255, 255, 0.05);
+		color: var(--text);
 	}
 
 	.shortcuts-list {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: 6px;
 	}
 
 	.shortcut {
 		font-size: 11px;
-		color: #888;
+		color: var(--text-muted);
+		display: flex;
+		align-items: center;
+		gap: 6px;
 	}
 
 	.shortcut :global(kbd) {
 		display: inline-block;
-		background: #1a1a2e;
-		border: 1px solid #333;
+		background: var(--bg-input);
+		border: 1px solid var(--border);
 		border-radius: 3px;
-		padding: 1px 5px;
+		padding: 1px 6px;
 		font-size: 10px;
-		font-family: monospace;
-		color: #aaa;
-		margin-right: 4px;
+		font-family: 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace;
+		color: var(--text);
 	}
 </style>

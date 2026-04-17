@@ -232,11 +232,11 @@
 	.material-list {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: 1px;
 	}
 
 	.material-item {
-		border-radius: 4px;
+		border-radius: var(--radius);
 	}
 
 	.material-header {
@@ -245,12 +245,12 @@
 		align-items: center;
 		padding: 6px 8px;
 		cursor: grab;
-		border-radius: 4px;
-		transition: background 0.15s;
+		border-radius: var(--radius);
+		transition: background 0.12s;
 	}
 
 	.material-header:hover {
-		background: rgba(255, 255, 255, 0.05);
+		background: rgba(255, 255, 255, 0.04);
 	}
 
 	.material-header:active {
@@ -259,8 +259,8 @@
 
 	.chevron {
 		font-size: 8px;
-		color: #666;
-		transition: transform 0.15s;
+		color: var(--text-dim);
+		transition: transform 0.12s;
 		flex-shrink: 0;
 	}
 
@@ -269,12 +269,13 @@
 	}
 
 	.material-thumb {
-		width: 40px;
-		height: 40px;
-		border-radius: 4px;
+		width: 36px;
+		height: 36px;
+		border-radius: 3px;
 		overflow: hidden;
 		flex-shrink: 0;
-		background: #1a1a2e;
+		background: var(--bg-panel-alt);
+		border: 1px solid var(--border);
 	}
 
 	.material-thumb img {
@@ -289,7 +290,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: #555;
+		color: var(--text-dim);
 		font-size: 14px;
 	}
 
@@ -299,12 +300,12 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		gap: 4px;
+		gap: 3px;
 	}
 
 	.material-name {
 		font-size: 12px;
-		color: #e0e0e0;
+		color: var(--text);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -312,14 +313,15 @@
 	}
 
 	.name-input {
-		background: #1a1a2e;
-		color: #e0e0e0;
-		border: 1px solid #3a5a8e;
+		background: var(--bg-input);
+		color: var(--text);
+		border: 1px solid var(--accent);
 		border-radius: 3px;
 		padding: 2px 6px;
 		font-size: 12px;
 		width: 100%;
 		box-sizing: border-box;
+		outline: none;
 	}
 
 	.channel-badges {
@@ -331,14 +333,14 @@
 	.badge {
 		font-size: 9px;
 		font-weight: 600;
-		padding: 1px 4px;
+		padding: 1px 5px;
 		border-radius: 3px;
 	}
 
 	.remove-btn {
 		background: transparent;
 		border: none;
-		color: #555;
+		color: var(--text-dim);
 		cursor: pointer;
 		font-size: 14px;
 		padding: 0 4px;
@@ -349,8 +351,8 @@
 	}
 
 	.remove-btn:hover {
-		color: #ff5555;
-		background: rgba(255, 85, 85, 0.1);
+		color: var(--danger);
+		background: rgba(229, 72, 77, 0.12);
 	}
 
 	.list-actions {
@@ -361,8 +363,8 @@
 
 	.clear-btn {
 		background: transparent;
-		border: 1px solid #333;
-		color: #888;
+		border: 1px solid var(--border-strong);
+		color: var(--text-muted);
 		font-size: 10px;
 		padding: 2px 8px;
 		border-radius: 3px;
@@ -370,17 +372,17 @@
 	}
 
 	.clear-btn:hover {
-		color: #ff5555;
-		border-color: #ff5555;
+		color: var(--danger);
+		border-color: var(--danger);
 	}
 
 	.channels-panel {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
-		padding: 4px 8px 8px 28px;
-		background: rgba(0, 0, 0, 0.15);
-		border-radius: 0 0 4px 4px;
+		gap: 3px;
+		padding: 6px 8px 8px 28px;
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: 0 0 var(--radius) var(--radius);
 	}
 
 	.channel-row {
@@ -398,7 +400,7 @@
 	}
 
 	.channel-label {
-		color: #c0c0c0;
+		color: var(--text-muted);
 		width: 74px;
 		flex-shrink: 0;
 	}
@@ -406,33 +408,34 @@
 	.channel-file {
 		flex: 1;
 		min-width: 0;
-		color: #888;
+		color: var(--text-dim);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		font-family: monospace;
+		font-family: 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace;
 		font-size: 10px;
 	}
 
 	.upload-btn {
-		background: #2a4a6e;
-		color: #cfe0f5;
-		border: 1px solid #3a5a8e;
+		background: var(--bg-button);
+		color: var(--text);
+		border: 1px solid transparent;
 		border-radius: 3px;
 		padding: 2px 8px;
 		font-size: 10px;
 		cursor: pointer;
 		flex-shrink: 0;
+		font-family: inherit;
 	}
 
 	.upload-btn:hover {
-		background: #3a5a8e;
+		background: var(--bg-button-hover);
 	}
 
 	.slot-x {
 		background: transparent;
 		border: none;
-		color: #777;
+		color: var(--text-dim);
 		cursor: pointer;
 		font-size: 14px;
 		padding: 0 3px;
@@ -441,6 +444,6 @@
 	}
 
 	.slot-x:hover {
-		color: #ff5555;
+		color: var(--danger);
 	}
 </style>
