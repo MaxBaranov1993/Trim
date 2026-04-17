@@ -9,7 +9,7 @@
 	import type { PBRChannel } from '$lib/engine/types.js';
 
 	let containerEl: HTMLDivElement;
-	let pixiCanvas: PixiCanvas | null = null;
+	let pixiCanvas = $state<PixiCanvas | null>(null);
 
 	const textureCache = new Map<string, Map<PBRChannel, Texture>>();
 	const objectUrls = new Set<string>();
