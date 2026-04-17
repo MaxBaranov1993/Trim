@@ -9,7 +9,8 @@
 	import type { PBRChannel } from '$lib/engine/types.js';
 
 	let containerEl: HTMLDivElement;
-	let pixiCanvas = $state<PixiCanvas | null>(null);
+	let pixiCanvas: PixiCanvas | null = null;
+	let pixiReady = $state(false);
 
 	const textureCache = new Map<string, Map<PBRChannel, Texture>>();
 	const objectUrls = new Set<string>();
@@ -17,6 +18,7 @@
 	onMount(async () => {
 		pixiCanvas = new PixiCanvas();
 		await pixiCanvas.init(containerEl, atlas.canvasWidth, atlas.canvasHeight);
+		pixiReady = true;
 
 		pixiCanvas.onBlockSelect = (id) => {
 			selection.selectedBlockId = id;
@@ -102,17 +104,17 @@
 	$effect(() => {
 		const w = atlas.canvasWidth;
 		const h = atlas.canvasHeight;
-		pixiCanvas?.resize(w, h);
+		if (pixiReady) pixiCanvas?.resize(w, h);
 	});
 
 	$effect(() => {
 		const blocks = atlas.blocks;
-		pixiCanvas?.setBlocks([...blocks]);
+		if (pixiReady) pixiCanvas?.setBlocks([...blocks]);
 	});
 
 	$effect(() => {
 		const ch = atlas.activeChannel;
-		pixiCanvas?.setActiveChannel(ch);
+		if (pixiReady) pixiCanvas?.setActiveChannel(ch);
 	});
 
 	export function fitToView() {
