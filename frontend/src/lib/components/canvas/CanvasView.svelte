@@ -34,6 +34,32 @@
 			project.markDirty();
 		};
 
+		pixiCanvas.onBlockTransformUpdate = (id, transform) => {
+			history.push();
+			atlas.updateBlock(id, { textureTransform: transform });
+			project.markDirty();
+		};
+
+		pixiCanvas.onTextureNativeResolved = (id, nw, nh) => {
+			const b = atlas.blocks.find((x) => x.id === id);
+			if (!b || b.textureTransform) return;
+			atlas.updateBlock(id, {
+				textureTransform: {
+					offsetX: (b.width - nw) / 2,
+					offsetY: (b.height - nh) / 2,
+					scale: 1,
+					rotation: 0,
+					nativeWidth: nw,
+					nativeHeight: nh
+				}
+			});
+			project.markDirty();
+		};
+
+		pixiCanvas.onEditModeChange = (id) => {
+			selection.editingBlockId = id;
+		};
+
 		pixiCanvas.onBlockDrop = async (materialId, x, y) => {
 			const material = atlas.materials.find((m) => m.id === materialId);
 			if (!material) return;
@@ -117,6 +143,11 @@
 		if (pixiReady) pixiCanvas?.setActiveChannel(ch);
 	});
 
+	$effect(() => {
+		const id = selection.editingBlockId;
+		if (pixiReady) pixiCanvas?.setEditingBlock(id);
+	});
+
 	export function fitToView() {
 		pixiCanvas?.fitToView();
 	}
@@ -125,6 +156,7 @@
 		if (!selection.selectedBlockId) return;
 		history.push();
 		const id = selection.selectedBlockId;
+		if (selection.editingBlockId === id) selection.editingBlockId = null;
 		atlas.removeBlock(id);
 		pixiCanvas?.removeBlock(id);
 		pixiCanvas?.setBlocks(atlas.blocks);

@@ -1,3 +1,12 @@
+export interface TextureTransform {
+	offsetX: number;
+	offsetY: number;
+	scale: number;
+	rotation: number;
+	nativeWidth: number;
+	nativeHeight: number;
+}
+
 export interface AtlasBlock {
 	id: string;
 	materialId: string;
@@ -5,6 +14,7 @@ export interface AtlasBlock {
 	y: number;
 	width: number;
 	height: number;
+	textureTransform?: TextureTransform;
 }
 
 export interface Slot {

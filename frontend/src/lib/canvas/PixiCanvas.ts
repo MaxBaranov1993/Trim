@@ -2,12 +2,17 @@ import { Application, Container, Graphics, Texture } from 'pixi.js';
 import { BlockSprite } from './BlockSprite.js';
 import { snapToGrid, clampToCanvas, nearestPowerOfTwo } from '$lib/engine/grid.js';
 import { wasmCheckCollision } from '$lib/engine/wasm-bridge.js';
-import type { AtlasBlock, PBRChannel } from '$lib/engine/types.js';
+import type { AtlasBlock, PBRChannel, TextureTransform } from '$lib/engine/types.js';
 
 export type BlockEventCallback = (blockId: string) => void;
 export type BlockUpdateCallback = (blockId: string, block: Partial<AtlasBlock>) => void;
 export type BlockDropCallback = (materialId: string, x: number, y: number) => void;
 export type DeselectCallback = () => void;
+export type BlockTransformUpdateCallback = (blockId: string, transform: TextureTransform) => void;
+export type TextureNativeResolvedCallback = (blockId: string, w: number, h: number) => void;
+export type EditModeChangeCallback = (blockId: string | null) => void;
+
+type EditMode = 'none' | 'pan' | 'scale' | 'rotate';
 
 export class PixiCanvas {
 	app: Application;
@@ -47,11 +52,25 @@ export class PixiCanvas {
 	// Ghost block for drop preview
 	private ghostGraphics: Graphics | null = null;
 
+	// Edit mode state
+	private editingBlockId: string | null = null;
+	private editMode: EditMode = 'none';
+	private editScaleCornerIdx: 0 | 1 | 2 | 3 = 0;
+	private editStartTransform: TextureTransform | null = null;
+	private editStartMouseWorld = { x: 0, y: 0 };
+	private editStartRotationAngle = 0;
+
+	// Keyboard handler reference (for cleanup)
+	private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
+
 	// Callbacks
 	onBlockSelect: BlockEventCallback = () => {};
 	onBlockUpdate: BlockUpdateCallback = () => {};
 	onBlockDrop: BlockDropCallback = () => {};
 	onDeselect: DeselectCallback = () => {};
+	onBlockTransformUpdate: BlockTransformUpdateCallback = () => {};
+	onTextureNativeResolved: TextureNativeResolvedCallback = () => {};
+	onEditModeChange: EditModeChangeCallback = () => {};
 
 	// Reference to current blocks for collision checks
 	private currentBlocks: AtlasBlock[] = [];
@@ -73,7 +92,7 @@ export class PixiCanvas {
 
 		await this.app.init({
 			resizeTo: container,
-			background: 0x1a1a2e,
+			background: 0x1e1e1e,
 			antialias: true
 		});
 
@@ -89,8 +108,18 @@ export class PixiCanvas {
 
 		this.setupInteraction();
 		this.setupDropZone(container);
+		this.setupKeyboard();
 		this.fitToView();
 		this.drawGrid();
+	}
+
+	private setupKeyboard() {
+		this.keydownHandler = (e: KeyboardEvent) => {
+			if (e.key === 'Escape' && this.editingBlockId) {
+				this.setEditingBlock(null);
+			}
+		};
+		window.addEventListener('keydown', this.keydownHandler);
 	}
 
 	private setupInteraction() {
@@ -120,23 +149,64 @@ export class PixiCanvas {
 			}
 
 			if (e.button === 0 && !e.shiftKey) {
-				// Check if clicking on a block
 				const worldPos = this.screenToWorld(e.clientX, e.clientY);
+
+				// Edit-mode interaction has priority
+				if (this.editingBlockId) {
+					const editBlock = this.currentBlocks.find((b) => b.id === this.editingBlockId);
+					const editSprite = editBlock ? this.blockSprites.get(editBlock.id) : null;
+					if (editBlock && editSprite) {
+						const localX = worldPos.x - editBlock.x;
+						const localY = worldPos.y - editBlock.y;
+						const handleHit = editSprite.hitTestEditHandle(localX, localY);
+
+						if (handleHit === 'rotate') {
+							this.beginRotate(editBlock, worldPos.x, worldPos.y);
+							return;
+						} else if (handleHit !== null) {
+							this.beginScale(editBlock, handleHit, worldPos.x, worldPos.y);
+							return;
+						}
+
+						// Inside frame → pan the texture
+						if (
+							localX >= 0 &&
+							localY >= 0 &&
+							localX <= editBlock.width &&
+							localY <= editBlock.height
+						) {
+							this.beginPan(editBlock, worldPos.x, worldPos.y);
+							return;
+						}
+
+						// Clicked outside editing block → exit edit mode
+						this.setEditingBlock(null);
+						// fall through to normal block-hit logic below
+					}
+				}
+
 				const hitBlock = this.hitTestBlock(worldPos.x, worldPos.y);
 
 				if (hitBlock) {
-					// Check if hitting resize handle
 					const sprite = this.blockSprites.get(hitBlock.id);
 					if (sprite) {
 						const localX = worldPos.x - hitBlock.x;
 						const localY = worldPos.y - hitBlock.y;
-						const handleSize = 24;
 
+						// Pencil icon (selected blocks only) → enter edit mode
+						if (
+							this.selectedBlockId === hitBlock.id &&
+							sprite.pencilIconContainsLocal(localX, localY)
+						) {
+							this.setEditingBlock(hitBlock.id);
+							return;
+						}
+
+						const handleSize = 24;
 						if (
 							localX > hitBlock.width - handleSize &&
 							localY > hitBlock.height - handleSize
 						) {
-							// Start resize
 							this.resizingBlockId = hitBlock.id;
 							this.resizeStartW = hitBlock.width;
 							this.resizeStartH = hitBlock.height;
@@ -146,7 +216,6 @@ export class PixiCanvas {
 						}
 					}
 
-					// Start block drag
 					this.selectBlock(hitBlock.id);
 					this.draggingBlockId = hitBlock.id;
 					this.dragOffsetX = worldPos.x - hitBlock.x;
@@ -160,6 +229,15 @@ export class PixiCanvas {
 			}
 		});
 
+		canvas.addEventListener('dblclick', (e: MouseEvent) => {
+			const worldPos = this.screenToWorld(e.clientX, e.clientY);
+			const hitBlock = this.hitTestBlock(worldPos.x, worldPos.y);
+			if (hitBlock) {
+				this.selectBlock(hitBlock.id);
+				this.setEditingBlock(hitBlock.id);
+			}
+		});
+
 		canvas.addEventListener('pointermove', (e: PointerEvent) => {
 			if (this._isPanning) {
 				const dx = e.clientX - this._lastPointerX;
@@ -169,6 +247,12 @@ export class PixiCanvas {
 				this._lastPointerX = e.clientX;
 				this._lastPointerY = e.clientY;
 				this.updateViewport();
+				return;
+			}
+
+			if (this.editMode !== 'none' && this.editingBlockId) {
+				const worldPos = this.screenToWorld(e.clientX, e.clientY);
+				this.updateEditDrag(worldPos.x, worldPos.y, e.shiftKey);
 				return;
 			}
 
@@ -218,6 +302,11 @@ export class PixiCanvas {
 		});
 
 		const stopInteraction = () => {
+			if (this.editMode !== 'none' && this.editingBlockId) {
+				this.endEditDrag();
+				return;
+			}
+
 			if (this.draggingBlockId) {
 				const sprite = this.blockSprites.get(this.draggingBlockId);
 				if (sprite) {
@@ -317,8 +406,8 @@ export class PixiCanvas {
 			size,
 			size
 		);
-		this.ghostGraphics.fill({ color: 0x8be9fd, alpha: 0.15 });
-		this.ghostGraphics.stroke({ color: 0x8be9fd, width: 2, alpha: 0.5 });
+		this.ghostGraphics.fill({ color: 0x0d99ff, alpha: 0.15 });
+		this.ghostGraphics.stroke({ color: 0x0d99ff, width: 2, alpha: 0.6 });
 	}
 
 	private hideGhost() {
@@ -331,11 +420,19 @@ export class PixiCanvas {
 
 	addBlock(block: AtlasBlock, materialName: string) {
 		const sprite = new BlockSprite(block, materialName);
+		sprite.onPencilClick = (id) => this.setEditingBlock(id);
+		sprite.onTextureNativeResolved = (id, w, h) => this.onTextureNativeResolved(id, w, h);
 		this.blockSprites.set(block.id, sprite);
 		this.blocksLayer.addChild(sprite.container);
 	}
 
 	removeBlock(id: string) {
+		if (this.editingBlockId === id) {
+			this.editingBlockId = null;
+			this.editMode = 'none';
+			this.editStartTransform = null;
+			this.onEditModeChange(null);
+		}
 		const sprite = this.blockSprites.get(id);
 		if (sprite) {
 			this.blocksLayer.removeChild(sprite.container);
@@ -368,6 +465,11 @@ export class PixiCanvas {
 	}
 
 	selectBlock(id: string) {
+		// Exit edit mode if switching to a different block
+		if (this.editingBlockId && this.editingBlockId !== id) {
+			this.setEditingBlock(null);
+		}
+
 		// Deselect previous
 		if (this.selectedBlockId) {
 			const prev = this.blockSprites.get(this.selectedBlockId);
@@ -383,6 +485,9 @@ export class PixiCanvas {
 	}
 
 	deselectBlock() {
+		if (this.editingBlockId) {
+			this.setEditingBlock(null);
+		}
 		if (this.selectedBlockId) {
 			const sprite = this.blockSprites.get(this.selectedBlockId);
 			if (sprite) sprite.selected = false;
@@ -398,8 +503,167 @@ export class PixiCanvas {
 			const sprite = this.blockSprites.get(block.id);
 			if (sprite) {
 				sprite.updateBlock(block);
+				if (block.textureTransform) {
+					sprite.applyTextureTransform(block.textureTransform);
+				}
 			}
 		}
+	}
+
+	// --- Edit mode ---
+
+	setEditingBlock(id: string | null) {
+		if (this.editingBlockId === id) return;
+
+		if (this.editingBlockId) {
+			const prev = this.blockSprites.get(this.editingBlockId);
+			if (prev) prev.setEditing(false);
+		}
+
+		this.editingBlockId = id;
+		this.editMode = 'none';
+		this.editStartTransform = null;
+
+		if (id) {
+			const sprite = this.blockSprites.get(id);
+			if (sprite) sprite.setEditing(true);
+		}
+
+		this.onEditModeChange(id);
+	}
+
+	private beginPan(block: AtlasBlock, worldX: number, worldY: number) {
+		if (!block.textureTransform) return;
+		this.editMode = 'pan';
+		this.editStartTransform = { ...block.textureTransform };
+		this.editStartMouseWorld = { x: worldX, y: worldY };
+		this.app.canvas.style.cursor = 'grabbing';
+	}
+
+	private beginScale(block: AtlasBlock, cornerIdx: 0 | 1 | 2 | 3, worldX: number, worldY: number) {
+		if (!block.textureTransform) return;
+		this.editMode = 'scale';
+		this.editScaleCornerIdx = cornerIdx;
+		this.editStartTransform = { ...block.textureTransform };
+		this.editStartMouseWorld = { x: worldX, y: worldY };
+		this.app.canvas.style.cursor = 'nwse-resize';
+	}
+
+	private beginRotate(block: AtlasBlock, worldX: number, worldY: number) {
+		if (!block.textureTransform) return;
+		const t = block.textureTransform;
+		const cx = block.x + t.offsetX + t.nativeWidth / 2;
+		const cy = block.y + t.offsetY + t.nativeHeight / 2;
+		this.editMode = 'rotate';
+		this.editStartTransform = { ...t };
+		this.editStartMouseWorld = { x: worldX, y: worldY };
+		this.editStartRotationAngle = Math.atan2(worldY - cy, worldX - cx);
+		this.app.canvas.style.cursor = 'grabbing';
+	}
+
+	private updateEditDrag(worldX: number, worldY: number, shiftKey: boolean) {
+		if (!this.editingBlockId || !this.editStartTransform) return;
+		const block = this.currentBlocks.find((b) => b.id === this.editingBlockId);
+		const sprite = this.blockSprites.get(this.editingBlockId);
+		if (!block || !sprite) return;
+
+		const t0 = this.editStartTransform;
+		const nw = t0.nativeWidth;
+		const nh = t0.nativeHeight;
+
+		if (this.editMode === 'pan') {
+			const dx = worldX - this.editStartMouseWorld.x;
+			const dy = worldY - this.editStartMouseWorld.y;
+			const next: TextureTransform = {
+				...t0,
+				offsetX: t0.offsetX + dx,
+				offsetY: t0.offsetY + dy
+			};
+			block.textureTransform = next;
+			sprite.block = { ...block };
+			sprite.applyTextureTransform(next);
+			return;
+		}
+
+		if (this.editMode === 'scale') {
+			// Compute texture center in frame coords at start
+			const cxStart = t0.offsetX + nw / 2;
+			const cyStart = t0.offsetY + nh / 2;
+			// Opposite corner in local texture space (unrotated, unscaled) for cornerIdx
+			// Corners order: 0=TL, 1=TR, 2=BR, 3=BL. Opposite: 0<->2, 1<->3.
+			const oppIdx = (this.editScaleCornerIdx + 2) % 4;
+			const locals: [number, number][] = [
+				[-nw / 2, -nh / 2],
+				[nw / 2, -nh / 2],
+				[nw / 2, nh / 2],
+				[-nw / 2, nh / 2]
+			];
+			const [lox, loy] = locals[oppIdx];
+			const [ldx, ldy] = locals[this.editScaleCornerIdx];
+			const cos = Math.cos(t0.rotation);
+			const sin = Math.sin(t0.rotation);
+			// Anchor (opposite corner) in frame coords
+			const anchorX = cxStart + (lox * cos - loy * sin) * t0.scale;
+			const anchorY = cyStart + (lox * sin + loy * cos) * t0.scale;
+			// Moving corner at start (frame coords)
+			const movingStartX = cxStart + (ldx * cos - ldy * sin) * t0.scale;
+			const movingStartY = cyStart + (ldx * sin + ldy * cos) * t0.scale;
+
+			const dStart = Math.hypot(movingStartX - anchorX, movingStartY - anchorY);
+			const dNow = Math.hypot(worldX - block.x - anchorX, worldY - block.y - anchorY);
+			if (dStart < 0.001) return;
+
+			let newScale = (t0.scale * dNow) / dStart;
+			newScale = Math.max(0.05, Math.min(20, newScale));
+
+			// Keep anchor fixed: newCenter = anchor + (Cstart - anchor) * (newScale / oldScale)
+			const k = newScale / t0.scale;
+			const newCx = anchorX + (cxStart - anchorX) * k;
+			const newCy = anchorY + (cyStart - anchorY) * k;
+
+			const next: TextureTransform = {
+				...t0,
+				scale: newScale,
+				offsetX: newCx - nw / 2,
+				offsetY: newCy - nh / 2
+			};
+			block.textureTransform = next;
+			sprite.block = { ...block };
+			sprite.applyTextureTransform(next);
+			return;
+		}
+
+		if (this.editMode === 'rotate') {
+			const cx = t0.offsetX + nw / 2;
+			const cy = t0.offsetY + nh / 2;
+			const currentAngle = Math.atan2(worldY - block.y - cy, worldX - block.x - cx);
+			let newRotation = t0.rotation + (currentAngle - this.editStartRotationAngle);
+			if (shiftKey) {
+				const step = Math.PI / 12; // 15deg
+				newRotation = Math.round(newRotation / step) * step;
+			}
+			const next: TextureTransform = { ...t0, rotation: newRotation };
+			block.textureTransform = next;
+			sprite.block = { ...block };
+			sprite.applyTextureTransform(next);
+			return;
+		}
+	}
+
+	private endEditDrag() {
+		if (!this.editingBlockId) {
+			this.editMode = 'none';
+			this.editStartTransform = null;
+			this.app.canvas.style.cursor = 'default';
+			return;
+		}
+		const block = this.currentBlocks.find((b) => b.id === this.editingBlockId);
+		if (block && block.textureTransform) {
+			this.onBlockTransformUpdate(this.editingBlockId, block.textureTransform);
+		}
+		this.editMode = 'none';
+		this.editStartTransform = null;
+		this.app.canvas.style.cursor = 'default';
 	}
 
 	// --- Collision ---
@@ -490,8 +754,8 @@ export class PixiCanvas {
 
 		const bg = new Graphics();
 		bg.rect(0, 0, this.canvasWidth, this.canvasHeight);
-		bg.fill(0x2a2a3e);
-		bg.stroke({ color: 0x444466, width: 2 });
+		bg.fill(0x2c2c2c);
+		bg.stroke({ color: 0x4c4c4c, width: 2 });
 		this.gridLayer.addChild(bg);
 
 		const grid = new Graphics();
@@ -504,7 +768,7 @@ export class PixiCanvas {
 			grid.moveTo(0, y);
 			grid.lineTo(this.canvasWidth, y);
 		}
-		grid.stroke({ color: 0x3a3a55, width: 1 });
+		grid.stroke({ color: 0x3c3c3c, width: 1 });
 
 		const majorStep = subStep * 4;
 		const majorGrid = new Graphics();
@@ -516,7 +780,7 @@ export class PixiCanvas {
 			majorGrid.moveTo(0, y);
 			majorGrid.lineTo(this.canvasWidth, y);
 		}
-		majorGrid.stroke({ color: 0x555577, width: 1 });
+		majorGrid.stroke({ color: 0x555555, width: 1 });
 
 		this.gridLayer.addChild(grid);
 		this.gridLayer.addChild(majorGrid);
@@ -539,6 +803,10 @@ export class PixiCanvas {
 	}
 
 	destroy() {
+		if (this.keydownHandler) {
+			window.removeEventListener('keydown', this.keydownHandler);
+			this.keydownHandler = null;
+		}
 		for (const sprite of this.blockSprites.values()) {
 			sprite.destroy();
 		}

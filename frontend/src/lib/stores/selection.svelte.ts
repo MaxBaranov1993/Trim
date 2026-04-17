@@ -2,6 +2,7 @@ let selectedBlockId = $state<string | null>(null);
 let isDragging = $state(false);
 let isResizing = $state(false);
 let dragMaterialId = $state<string | null>(null);
+let editingBlockId = $state<string | null>(null);
 
 export const selection = {
 	get selectedBlockId() {
@@ -28,7 +29,17 @@ export const selection = {
 	set dragMaterialId(id: string | null) {
 		dragMaterialId = id;
 	},
+	get editingBlockId() {
+		return editingBlockId;
+	},
+	set editingBlockId(id: string | null) {
+		editingBlockId = id;
+	},
+	setEditingBlock(id: string | null) {
+		editingBlockId = id;
+	},
 	deselect() {
 		selectedBlockId = null;
+		editingBlockId = null;
 	}
 };
