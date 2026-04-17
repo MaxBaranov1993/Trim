@@ -54,8 +54,35 @@ export const atlas = {
 	addMaterial(material: MaterialGroup) {
 		materials.push(material);
 	},
+	addEmptyMaterial(name: string): string {
+		const id = crypto.randomUUID();
+		materials.push({ id, name, channels: {} });
+		return id;
+	},
 	setMaterials(mats: MaterialGroup[]) {
 		materials = mats;
+	},
+	setMaterialChannel(materialId: string, channel: PBRChannel, file: File | null) {
+		const idx = materials.findIndex((m) => m.id === materialId);
+		if (idx === -1) return;
+		const prev = materials[idx];
+		const nextChannels = { ...prev.channels };
+		if (file) {
+			nextChannels[channel] = file;
+		} else {
+			delete nextChannels[channel];
+		}
+		materials[idx] = { ...prev, channels: nextChannels };
+	},
+	setMaterialThumbnail(materialId: string, thumbnail: string) {
+		const idx = materials.findIndex((m) => m.id === materialId);
+		if (idx === -1) return;
+		materials[idx] = { ...materials[idx], thumbnail };
+	},
+	renameMaterial(materialId: string, name: string) {
+		const idx = materials.findIndex((m) => m.id === materialId);
+		if (idx === -1) return;
+		materials[idx] = { ...materials[idx], name };
 	},
 	removeMaterial(id: string) {
 		// Remove all blocks using this material

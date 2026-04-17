@@ -15,7 +15,9 @@
 		try {
 			const groups = groupFiles(files);
 			const withThumbs = await generateThumbnails(groups);
-			atlas.setMaterials(withThumbs);
+			for (const mat of withThumbs) {
+				atlas.addMaterial(mat);
+			}
 		} finally {
 			isProcessing = false;
 		}
@@ -45,6 +47,11 @@
 	function onDragLeave() {
 		isDragOver = false;
 	}
+
+	function createMaterial() {
+		const name = `Material ${atlas.materials.length + 1}`;
+		atlas.addEmptyMaterial(name);
+	}
 </script>
 
 <div
@@ -67,6 +74,7 @@
 			onchange={onInputChange}
 			class="hidden-input"
 		/>
+		<button class="new-btn" onclick={createMaterial}>+ New Material</button>
 		<button class="import-btn" onclick={() => fileInput.click()}>
 			Import Folder
 		</button>
@@ -81,6 +89,9 @@
 		border: 2px dashed transparent;
 		border-radius: 4px;
 		transition: border-color 0.2s;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
 	}
 
 	.drag-over {
@@ -90,6 +101,21 @@
 
 	.hidden-input {
 		display: none;
+	}
+
+	.new-btn {
+		background: #2a5a3a;
+		color: #e0e0e0;
+		border: 1px solid #3a7a4e;
+		border-radius: 6px;
+		padding: 8px 20px;
+		cursor: pointer;
+		font-size: 13px;
+		width: 100%;
+	}
+
+	.new-btn:hover {
+		background: #3a7a4e;
 	}
 
 	.import-btn {
@@ -110,7 +136,7 @@
 	.drop-hint {
 		color: #555;
 		font-size: 11px;
-		margin: 8px 0 0;
+		margin: 4px 0 0;
 	}
 
 	.processing {

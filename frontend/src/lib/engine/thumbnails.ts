@@ -8,7 +8,7 @@ async function fileToBytes(file: File): Promise<Uint8Array> {
 	return new Uint8Array(buffer);
 }
 
-async function generateSingleThumbnail(file: File): Promise<string> {
+export async function generateSingleThumbnail(file: File): Promise<string> {
 	if (isReady()) {
 		try {
 			const bytes = await fileToBytes(file);
